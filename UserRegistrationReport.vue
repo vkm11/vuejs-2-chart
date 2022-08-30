@@ -178,7 +178,7 @@ export default {
       axios.post('/user/registrations', this.reportForm)
       .then((res) => {
         this.reports = JSON.parse(JSON.stringify(res.data.result.data));
-        this.jsonData = JSON.parse(JSON.stringify(res.data.result.users));
+       // this.jsonData = JSON.parse(JSON.stringify(res.data.result.users));
         if(this.reportForm.type == 1 || this.reportForm.type == 5){
           this.jsonData = JSON.parse(JSON.stringify(res.data.result.users));
         }else{
