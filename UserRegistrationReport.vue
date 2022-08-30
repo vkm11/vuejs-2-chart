@@ -24,8 +24,12 @@
       </label>
 
       <label class="m-3">
-        <vs-button class="mr-1"  @click="fetchreport()">Get Report</vs-button>
+        <vs-button @click="fetchreport()">Get Report</vs-button>
       </label>
+
+      <vs-button :disabled="jsonData == ''">
+        <vue-json-to-csv :json-data=jsonData>Export CSV</vue-json-to-csv>
+      </vs-button>
     </div>
 
 
@@ -50,21 +54,81 @@
 
 
     <div class="mb-8"> 
-      <h6 class="m-2 ">User Registration Report Table</h6>
-      <vs-table :data="reports">
+      <h6 class="m-2">User Registration Report Table</h6>
+      <vs-table v-if="reportForm.type == 1" :data="jsonData">
+        <template slot="thead"> 
+          <vs-th>No</vs-th>  
+          <vs-th>Customer Name</vs-th>    
+          <vs-th>Country</vs-th>  
+          <vs-th>Phone No</vs-th>  
+          <vs-th>Email</vs-th>  
+        </template> 
+        <template slot-scope="{data}"> 
+          <vs-tr :key="index" v-for="(tr, index) in data">
+            <vs-td>{{ index+1 }}</vs-td>
+            <vs-td>{{ tr.user_name}}</vs-td>
+            <vs-td>{{ tr.country}}</vs-td>
+            <vs-td>{{ tr.phone}}</vs-td>
+            <vs-td>{{ tr.email}}</vs-td>
+          </vs-tr> 
+        </template> 
+      </vs-table> 
+      <vs-table v-else-if="reportForm.type == 5" :data="jsonData">
+        <template slot="thead"> 
+          <vs-th>No</vs-th>  
+          <vs-th>Customer Name</vs-th>  
+          <vs-th>Date</vs-th>  
+          <vs-th>Country</vs-th>  
+          <vs-th>Phone No</vs-th>  
+          <vs-th>Email</vs-th>   
+        </template> 
+        <template slot-scope="{data}"> 
+          <vs-tr :key="index" v-for="(tr, index) in data">
+            <vs-td>{{ index+1 }}</vs-td>
+            <vs-td>{{ tr.user_name }}</vs-td>
+            <vs-td>{{ tr.date}}</vs-td>
+            <vs-td>{{tr.country}}</vs-td>
+            <vs-td>{{ tr.phone}}</vs-td>
+            <vs-td>{{ tr.email}}</vs-td>
+          </vs-tr> 
+        </template> 
+      </vs-table>
+      <vs-table v-else-if="reportForm.type == 2" :data="reports">
         <template slot="thead"> 
           <vs-th>Date</vs-th> 
           <vs-th>Total Registration</vs-th> 
-          <!-- <vs-th>Agencies</vs-th>  -->
         </template> 
         <template slot-scope="{data}"> 
           <vs-tr :key="index" v-for="(tr, index) in data">
             <vs-td >{{ tr.date}}</vs-td>
             <vs-td>{{ tr.total_users }}</vs-td>
-            <!-- <vs-td><a href =''>View Agencies</a></vs-td> -->
           </vs-tr> 
         </template> 
       </vs-table> 
+      <vs-table v-else-if="reportForm.type == 3" :data="reports">
+        <template slot="thead"> 
+          <vs-th>Month</vs-th> 
+          <vs-th>Total Registration</vs-th> 
+        </template> 
+        <template slot-scope="{data}"> 
+          <vs-tr :key="index" v-for="(tr, index) in data">
+            <vs-td >{{ tr.date}}</vs-td>
+            <vs-td>{{ tr.total_users }}</vs-td>
+          </vs-tr> 
+        </template> 
+      </vs-table>
+      <vs-table v-else-if="reportForm.type == 4" :data="reports">
+        <template slot="thead"> 
+          <vs-th>Year</vs-th> 
+          <vs-th>Total Registration</vs-th> 
+        </template> 
+        <template slot-scope="{data}"> 
+          <vs-tr :key="index" v-for="(tr, index) in data">
+            <vs-td >{{ tr.date}}</vs-td>
+            <vs-td>{{ tr.total_users }}</vs-td>
+          </vs-tr> 
+        </template> 
+      </vs-table>
     </div>
 
   </vx-card>
@@ -76,12 +140,13 @@ import { required } from 'vuelidate/lib/validators';
 import Datepicker from 'vuejs-datepicker'
 import axios from 'axios';
 import UserLine from './UserLine.vue';
-
+import VueJsonToCsv from 'vue-json-to-csv';
 export default {
   name: 'Users-Report',
   components: {
     Datepicker,
-    UserLine
+    UserLine,
+    VueJsonToCsv
   },
   data() {
     return {
@@ -90,6 +155,7 @@ export default {
         enddate: '',
         type: '',
       },
+      jsonData:[],
       reports:[],
       datacollection: {},
       chartnewdata: {
@@ -112,6 +178,12 @@ export default {
       axios.post('/user/registrations', this.reportForm)
       .then((res) => {
         this.reports = JSON.parse(JSON.stringify(res.data.result.data));
+
+        if(this.reportForm.type == 1 || this.reportForm.type == 5){
+          this.jsonData = JSON.parse(JSON.stringify(res.data.result.users));
+        }else{
+          this.jsonData = JSON.parse(JSON.stringify(res.data.result.data));
+        }
         this.chartnewdata.date = [];
         this.chartnewdata.user = [];
         for(let i=0; i<this.reports.length; i++){
@@ -134,17 +206,17 @@ export default {
             }, 
           ]
         }
-      }, 300);
+      }, 3000);
     },
     onChange(event) {
+      this.jsonData = [];
       if (document.getElementById('yesCheck').checked) {
         document.getElementById('ifYes').style.visibility = 'visible';
       }
       else document.getElementById('ifYes').style.visibility = 'hidden';
 
-
       var optionText = event.target.value;
-      console.log(optionText);
+      console.log(optionText);      
     }
   },
 }  
